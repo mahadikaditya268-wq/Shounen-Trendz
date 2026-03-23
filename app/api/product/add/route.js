@@ -60,7 +60,10 @@ export async function POST(request) {
             })
         )
 
-        const image = result.map(result => result.secure_url)
+        const image = result.map((item) => ({
+            url: item.secure_url,
+            publicId: item.public_id,
+        }))
 
         await connectDB()
         const newProduct = await Product.create({
@@ -78,6 +81,6 @@ export async function POST(request) {
 
 
     } catch (error) {
-        NextResponse.json({ success: false, message: error.message })
+        return NextResponse.json({ success: false, message: error.message })
     }
 }

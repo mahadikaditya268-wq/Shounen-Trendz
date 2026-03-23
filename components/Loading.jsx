@@ -2,8 +2,14 @@ import React from 'react'
 
 const Loading = () => {
     return (
-        <div className="flex justify-center items-center h-[70vh]">
-            <div className="animate-spin rounded-full h-20 w-20 border-4 border-t-orange-300 border-gray-200"></div>
+        <div className="flex flex-col justify-center items-center h-[70vh] gap-4">
+            {/* Animated Loader */}
+            <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-full border-[3px] border-gray-200" />
+                <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-orange-500 animate-spin" />
+                <div className="absolute inset-2 rounded-full border-[3px] border-transparent border-t-orange-300 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
+            </div>
+            <p className="text-sm text-gray-400 font-medium tracking-wide animate-pulse">Loading...</p>
         </div>
     )
 }

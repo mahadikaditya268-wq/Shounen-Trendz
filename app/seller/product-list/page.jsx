@@ -14,6 +14,15 @@ const ProductList = () => {
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [deletingId, setDeletingId] = useState('')
+
+  const getImageUrl = (imageItem) => {
+    if (typeof imageItem === 'string') {
+      return imageItem
+    }
+
+    return imageItem?.url || ''
+  }
 
   const fetchSellerProduct = async () => {
     try {
@@ -31,6 +40,34 @@ const ProductList = () => {
 
     } catch (error) {
       toast.error(error.message)
+    }
+  }
+
+  const handleDeleteProduct = async (productId) => {
+    const confirmed = window.confirm('Are you sure you want to delete this product?')
+
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      setDeletingId(productId)
+      const token = await getToken()
+      const { data } = await axios.delete('/api/product/delete', {
+        data: { id: productId },
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      if (data.success) {
+        toast.success(data.message)
+        setProducts((prev) => prev.filter((item) => item._id !== productId))
+      } else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    } finally {
+      setDeletingId('')
     }
   }
 
@@ -53,7 +90,7 @@ const ProductList = () => {
                 <th className="px-4 py-3 font-medium truncate">
                   Price
                 </th>
-                <th className="px-4 py-3 font-medium truncate max-sm:hidden">Action</th>
+                <th className="px-4 py-3 font-medium truncate max-sm:hidden">Actions</th>
               </tr>
             </thead>
             <tbody className="text-sm text-gray-500">
@@ -62,7 +99,7 @@ const ProductList = () => {
                   <td className="md:px-4 pl-2 md:pl-4 py-3 flex items-center space-x-3 truncate">
                     <div className="bg-gray-500/10 rounded p-2">
                       <Image
-                        src={product.image[0]}
+                        src={getImageUrl(product.image[0])}
                         alt="product Image"
                         className="w-16"
                         width={1280}
@@ -76,14 +113,31 @@ const ProductList = () => {
                   <td className="px-4 py-3 max-sm:hidden">{product.category}</td>
                   <td className="px-4 py-3">${product.offerPrice}</td>
                   <td className="px-4 py-3 max-sm:hidden">
-                    <button onClick={() => router.push(`/product/${product._id}`)} className="flex items-center gap-1 px-1.5 md:px-3.5 py-2 bg-orange-600 text-white rounded-md">
-                      <span className="hidden md:block">Visit</span>
-                      <Image
-                        className="h-3.5"
-                        src={assets.redirect_icon}
-                        alt="redirect_icon"
-                      />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => router.push(`/seller/edit-product/${product._id}`)} className="flex items-center gap-1 px-2 md:px-3.5 py-2 bg-blue-600 text-white rounded-md">
+                        <span className="hidden md:block">Edit</span>
+                        <Image
+                          className="h-3.5"
+                          src={assets.redirect_icon}
+                          alt="edit_icon"
+                        />
+                      </button>
+                      <button onClick={() => router.push(`/product/${product._id}`)} className="flex items-center gap-1 px-2 md:px-3.5 py-2 bg-orange-600 text-white rounded-md">
+                        <span className="hidden md:block">Visit</span>
+                        <Image
+                          className="h-3.5"
+                          src={assets.redirect_icon}
+                          alt="redirect_icon"
+                        />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(product._id)}
+                        disabled={deletingId === product._id}
+                        className="px-3 md:px-3.5 py-2 bg-red-600 text-white rounded-md disabled:opacity-70"
+                      >
+                        {deletingId === product._id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

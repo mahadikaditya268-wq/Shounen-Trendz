@@ -19,6 +19,16 @@ const Product = () => {
     const [mainImage, setMainImage] = useState(null);
     const [productData, setProductData] = useState(null);
 
+    const getImageUrl = (imageItem) => {
+        if (typeof imageItem === 'string') {
+            return imageItem
+        }
+
+        return imageItem?.url || ''
+    }
+
+    const productImages = productData?.image?.map((item) => getImageUrl(item)).filter(Boolean) || []
+
     const fetchProductData = async () => {
         const product = products.find(product => product._id === id);
         setProductData(product);
@@ -35,7 +45,7 @@ const Product = () => {
                 <div className="px-5 lg:px-16 xl:px-20">
                     <div className="rounded-lg overflow-hidden bg-gray-500/10 mb-4">
                         <Image
-                            src={mainImage || productData.image[0]}
+                            src={mainImage || productImages[0]}
                             alt="alt"
                             className="w-full h-auto object-cover mix-blend-multiply"
                             width={1280}
@@ -44,7 +54,7 @@ const Product = () => {
                     </div>
 
                     <div className="grid grid-cols-4 gap-4">
-                        {productData.image.map((image, index) => (
+                        {productImages.map((image, index) => (
                             <div
                                 key={index}
                                 onClick={() => setMainImage(image)}
