@@ -2,39 +2,59 @@ import React from "react";
 
 const NewsLetter = () => {
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 my-16 md:my-24 mx-4 md:mx-0">
-      {/* Decorative Elements */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-orange-500/10 rounded-full blur-[100px]" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/8 rounded-full blur-[80px]" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-orange-500/5 rounded-full blur-[120px]" />
+    <section className="my-20 md:my-28">
+      <div className="relative overflow-hidden rounded-[28px] border border-[var(--border-strong)] bg-[var(--surface-card)] px-8 md:px-16 py-14 md:py-20">
 
-      <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-16 md:py-20">
-        {/* Badge */}
-        <span className="inline-block px-4 py-1.5 text-[10px] font-bold tracking-[0.25em] uppercase text-orange-400 border border-orange-400/20 rounded-full mb-6">
-          Exclusive Offer
-        </span>
+        <div className="absolute top-6 left-6 w-12 h-12 border-t border-l border-[var(--accent)]/30" />
+        <div className="absolute top-6 right-6 w-12 h-12 border-t border-r border-[var(--accent)]/30" />
+        <div className="absolute bottom-6 left-6 w-12 h-12 border-b border-l border-[var(--accent)]/30" />
+        <div className="absolute bottom-6 right-6 w-12 h-12 border-b border-r border-[var(--accent)]/30" />
 
-        <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight max-w-lg leading-tight">
-          Subscribe now &<br />get <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500">20% off</span>
-        </h2>
+        <div className="absolute inset-0 opacity-30"
+          style={{
+            background: `radial-gradient(ellipse at 50% 100%, rgba(255, 83, 61, 0.22) 0%, transparent 70%)`
+          }}
+        />
 
-        <p className="text-sm md:text-base text-gray-400 mt-4 mb-10 max-w-md leading-relaxed">
-          Join our newsletter and be the first to know about new arrivals, exclusive deals, and insider-only discounts.
-        </p>
+        <div className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto space-y-8">
+          <span className="label-tag">Backstage Access</span>
 
-        {/* Input Group */}
-        <div className="flex items-center max-w-xl w-full h-12 md:h-14 bg-white/10 backdrop-blur-sm rounded-full border border-white/10 p-1.5 focus-within:border-orange-500/50 transition-colors duration-300">
-          <input
-            className="flex-1 h-full bg-transparent outline-none px-5 text-sm text-white placeholder:text-gray-500"
-            type="email"
-            placeholder="Enter your email address"
-          />
-          <button className="h-full px-6 md:px-10 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-semibold rounded-full hover:shadow-lg hover:shadow-orange-500/25 transition-all duration-300 whitespace-nowrap">
-            Subscribe
-          </button>
+          <div className="space-y-3">
+            <h2 className="heading-display text-5xl md:text-7xl text-[var(--ink)] leading-tight">
+              Join The<br />
+              Drop List
+            </h2>
+            <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-sm mx-auto">
+              Get first access to fresh capsules, styling edits, and anime-inspired collab announcements.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row w-full max-w-lg gap-0 sm:gap-0 shadow-sm">
+            <input
+              type="email"
+              placeholder="you@streetmail.com"
+              className="flex-1 font-body text-sm text-[var(--text-primary)] bg-[var(--surface-alt)] border border-[var(--border-strong)] sm:border-r-0 px-5 py-4 outline-none placeholder:text-[var(--text-ghost)] rounded-l-sm focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(255,83,61,0.16)] transition-all"
+            />
+            <button className="bg-[var(--ink)] text-white text-[12px] font-semibold tracking-[0.12em] uppercase px-8 py-4 hover:bg-[var(--accent)] transition-colors duration-300 whitespace-nowrap rounded-r-sm">
+              Join Crew
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-6 pt-2">
+            {[
+              { icon: "N", text: "No spam" },
+              { icon: "24H", text: "Drop alerts first" },
+              { icon: "VIP", text: "Members perks" },
+            ].map(({ icon, text }) => (
+              <div key={text} className="flex items-center gap-2">
+                <span className="font-mono text-[10px] px-2 py-0.5 border border-[var(--border)] rounded-full">{icon}</span>
+                <span className="font-mono text-[9px] tracking-widest uppercase text-[var(--text-ghost)]">
+                  {text}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-
-        <p className="text-[11px] text-gray-500 mt-4">No spam, unsubscribe anytime. We respect your privacy.</p>
       </div>
     </section>
   );

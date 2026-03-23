@@ -6,39 +6,81 @@ const HomeProducts = () => {
   const { products, router } = useAppContext();
 
   return (
-    <section className="flex flex-col items-center pt-16 md:pt-24">
-      {/* Section Header */}
-      <div className="flex items-center justify-between w-full mb-8 md:mb-10">
-        <div>
-          <span className="text-xs font-bold tracking-[0.2em] uppercase text-orange-500 mb-2 block">Trending Now</span>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Popular Products</h2>
+    <section className="pt-20 md:pt-28">
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-14 gap-6">
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="w-6 h-px bg-[var(--accent)]" />
+            <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[var(--accent-deep)]">
+              Street Rotation
+            </span>
+          </div>
+          <h2 className="heading-display text-5xl md:text-6xl text-[var(--ink)]">
+            Most Wanted<br />
+            Fits
+          </h2>
         </div>
-        <button
-          onClick={() => { router.push('/all-products') }}
-          className="hidden md:flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors duration-300 group"
-        >
-          View all
-          <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </button>
+
+        <div className="flex flex-col items-start md:items-end gap-2">
+          <p className="text-sm text-[var(--text-muted)] max-w-xs leading-relaxed">
+            Weekly picks from our urban archive, curated for high-energy street looks.
+          </p>
+          <button
+            onClick={() => router.push('/all-products')}
+            className="btn-outline"
+          >
+            View all fits
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              className="transition-transform group-hover:translate-x-1"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
       </div>
 
-      {/* Product Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 w-full pb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
         {products.map((product, index) => (
-          <ProductCard key={index} product={product} />
+          <div
+            key={index}
+            className="animate-fade-up"
+            style={{ animationDelay: `${index * 0.05}s`, animationFillMode: 'both' }}
+          >
+            <ProductCard product={product} />
+          </div>
         ))}
       </div>
 
-      {/* Mobile See More */}
-      <button
-        onClick={() => { router.push('/all-products') }}
-        className="group relative px-12 py-3 border-2 border-gray-200 rounded-full text-sm font-semibold text-gray-600 hover:border-orange-500 hover:text-orange-600 transition-all duration-300 overflow-hidden"
-      >
-        <span className="relative z-10">See more</span>
-        <div className="absolute inset-0 bg-orange-50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-      </button>
+      <div className="flex flex-col items-center mt-14 gap-4">
+        <div className="divider-ornament w-full max-w-xs">
+          <span className="font-mono text-[9px] tracking-widest text-[var(--text-ghost)] uppercase whitespace-nowrap">
+            next district drops
+          </span>
+        </div>
+        <button
+          onClick={() => router.push('/all-products')}
+          className="btn-outline group"
+        >
+          <span>Browse full collection</span>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            className="transition-transform group-hover:translate-x-1"
+          >
+            <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
     </section>
   );
 };

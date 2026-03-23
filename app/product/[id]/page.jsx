@@ -14,7 +14,7 @@ const Product = () => {
 
     const { id } = useParams();
 
-    const { products, router, addToCart, user } = useAppContext()
+    const { products, router, addToCart } = useAppContext()
 
     const [mainImage, setMainImage] = useState(null);
     const [productData, setProductData] = useState(null);
@@ -40,14 +40,14 @@ const Product = () => {
 
     return productData ? (<>
         <Navbar />
-        <div className="px-6 md:px-16 lg:px-32 pt-14 space-y-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-                <div className="px-5 lg:px-16 xl:px-20">
-                    <div className="rounded-lg overflow-hidden bg-gray-500/10 mb-4">
+        <div className="px-6 md:px-16 lg:px-24 xl:px-32 pt-12 md:pt-16 space-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16">
+                <div className="px-0 md:px-4 lg:px-10">
+                    <div className="card-street rounded-2xl overflow-hidden mb-4">
                         <Image
                             src={mainImage || productImages[0]}
                             alt="alt"
-                            className="w-full h-auto object-cover mix-blend-multiply"
+                            className="w-full h-auto object-cover mix-blend-multiply p-3"
                             width={1280}
                             height={720}
                         />
@@ -58,12 +58,14 @@ const Product = () => {
                             <div
                                 key={index}
                                 onClick={() => setMainImage(image)}
-                                className="cursor-pointer rounded-lg overflow-hidden bg-gray-500/10"
+                                className={`cursor-pointer rounded-lg overflow-hidden border ${
+                                    (mainImage || productImages[0]) === image ? 'border-[var(--accent)]' : 'border-[var(--border)]'
+                                } bg-[var(--surface-card)]`}
                             >
                                 <Image
                                     src={image}
                                     alt="alt"
-                                    className="w-full h-auto object-cover mix-blend-multiply"
+                                    className="w-full h-auto object-cover mix-blend-multiply p-2"
                                     width={1280}
                                     height={720}
                                 />
@@ -74,7 +76,8 @@ const Product = () => {
                 </div>
 
                 <div className="flex flex-col">
-                    <h1 className="text-3xl font-medium text-gray-800/90 mb-4">
+                    <p className="font-mono text-[10px] tracking-[0.16em] uppercase text-[var(--accent-deep)] mb-3">Streetwear Piece</p>
+                    <h1 className="heading-display text-5xl md:text-6xl text-[var(--ink)] mb-4">
                         {productData.name}
                     </h1>
                     <div className="flex items-center gap-2">
@@ -89,32 +92,32 @@ const Product = () => {
                                 alt="star_dull_icon"
                             />
                         </div>
-                        <p>(4.5)</p>
+                        <p className="font-mono text-xs text-[var(--text-muted)]">(4.5)</p>
                     </div>
-                    <p className="text-gray-600 mt-3">
+                    <p className="text-[var(--text-secondary)] mt-4 leading-relaxed">
                         {productData.description}
                     </p>
-                    <p className="text-3xl font-medium mt-6">
+                    <p className="text-3xl font-semibold mt-6 text-[var(--ink)]">
                         ${productData.offerPrice}
-                        <span className="text-base font-normal text-gray-800/60 line-through ml-2">
+                        <span className="text-base font-normal text-[var(--text-muted)] line-through ml-2">
                             ${productData.price}
                         </span>
                     </p>
-                    <hr className="bg-gray-600 my-6" />
+                    <hr className="bg-[var(--border)] my-6" />
                     <div className="overflow-x-auto">
-                        <table className="table-auto border-collapse w-full max-w-72">
+                        <table className="table-auto border-collapse w-full max-w-80 text-sm">
                             <tbody>
                                 <tr>
-                                    <td className="text-gray-600 font-medium">Brand</td>
-                                    <td className="text-gray-800/50 ">Generic</td>
+                                    <td className="text-[var(--text-secondary)] font-medium py-1.5">Brand</td>
+                                    <td className="text-[var(--text-muted)] py-1.5">Shounen Trendz</td>
                                 </tr>
                                 <tr>
-                                    <td className="text-gray-600 font-medium">Color</td>
-                                    <td className="text-gray-800/50 ">Multi</td>
+                                    <td className="text-[var(--text-secondary)] font-medium py-1.5">Fit</td>
+                                    <td className="text-[var(--text-muted)] py-1.5">Oversized</td>
                                 </tr>
                                 <tr>
-                                    <td className="text-gray-600 font-medium">Category</td>
-                                    <td className="text-gray-800/50">
+                                    <td className="text-[var(--text-secondary)] font-medium py-1.5">Category</td>
+                                    <td className="text-[var(--text-muted)] py-1.5">
                                         {productData.category}
                                     </td>
                                 </tr>
@@ -123,10 +126,10 @@ const Product = () => {
                     </div>
 
                     <div className="flex items-center mt-10 gap-4">
-                        <button onClick={() => addToCart(productData._id)} className="w-full py-3.5 bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition">
+                        <button onClick={() => addToCart(productData._id)} className="w-full py-3.5 border border-[var(--border-strong)] text-[var(--text-primary)] hover:bg-[var(--surface-alt)] transition font-medium tracking-[0.06em] uppercase text-sm rounded-lg">
                             Add to Cart
                         </button>
-                        <button onClick={() => { addToCart(productData._id); router.push(user ? '/cart' : '') }} className="w-full py-3.5 bg-orange-500 text-white hover:bg-orange-600 transition">
+                        <button onClick={() => { addToCart(productData._id); router.push('/cart') }} className="w-full py-3.5 bg-[var(--ink)] text-white hover:bg-[var(--accent)] transition font-semibold tracking-[0.08em] uppercase text-sm rounded-lg">
                             Buy now
                         </button>
                     </div>
@@ -134,13 +137,13 @@ const Product = () => {
             </div>
             <div className="flex flex-col items-center">
                 <div className="flex flex-col items-center mb-4 mt-16">
-                    <p className="text-3xl font-medium">Featured <span className="font-medium text-orange-600">Products</span></p>
-                    <div className="w-28 h-0.5 bg-orange-600 mt-2"></div>
+                    <p className="heading-display text-5xl text-[var(--ink)]">Related Fits</p>
+                    <div className="w-28 h-0.5 bg-[var(--accent)] mt-2"></div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 pb-14 w-full">
                     {products.slice(0, 5).map((product, index) => <ProductCard key={index} product={product} />)}
                 </div>
-                <button className="px-8 py-2 mb-16 border rounded text-gray-500/70 hover:bg-slate-50/90 transition">
+                <button className="btn-outline mb-16">
                     See more
                 </button>
             </div>

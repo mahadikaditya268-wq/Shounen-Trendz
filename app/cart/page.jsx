@@ -13,28 +13,28 @@ const Cart = () => {
   return (
     <>
       <Navbar />
-      <div className="flex flex-col md:flex-row gap-10 px-6 md:px-16 lg:px-32 pt-14 mb-20">
+      <div className="flex flex-col md:flex-row gap-10 px-6 md:px-16 lg:px-24 xl:px-32 pt-12 md:pt-16 mb-20">
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-8 border-b border-gray-500/30 pb-6">
-            <p className="text-2xl md:text-3xl text-gray-500">
-              Your <span className="font-medium text-orange-600">Cart</span>
+          <div className="flex items-center justify-between mb-8 border-b border-[var(--border)] pb-6">
+            <p className="heading-display text-5xl md:text-6xl text-[var(--ink)]">
+              Your Cart
             </p>
-            <p className="text-lg md:text-xl text-gray-500/80">{getCartCount()} Items</p>
+            <p className="font-mono text-sm md:text-base text-[var(--text-muted)] tracking-[0.1em] uppercase">{getCartCount()} Items</p>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full table-auto">
               <thead className="text-left">
                 <tr>
-                  <th className="text-nowrap pb-6 md:px-4 px-1 text-gray-600 font-medium">
+                  <th className="text-nowrap pb-6 md:px-4 px-1 text-[var(--text-secondary)] font-semibold">
                     Product Details
                   </th>
-                  <th className="pb-6 md:px-4 px-1 text-gray-600 font-medium">
+                  <th className="pb-6 md:px-4 px-1 text-[var(--text-secondary)] font-semibold">
                     Price
                   </th>
-                  <th className="pb-6 md:px-4 px-1 text-gray-600 font-medium">
+                  <th className="pb-6 md:px-4 px-1 text-[var(--text-secondary)] font-semibold">
                     Quantity
                   </th>
-                  <th className="pb-6 md:px-4 px-1 text-gray-600 font-medium">
+                  <th className="pb-6 md:px-4 px-1 text-[var(--text-secondary)] font-semibold">
                     Subtotal
                   </th>
                 </tr>
@@ -47,10 +47,10 @@ const Cart = () => {
                   if (!product || cartItems[itemId] <= 0) return null;
 
                   return (
-                    <tr key={itemId}>
+                    <tr key={itemId} className="border-b border-[var(--border)]/60">
                       <td className="flex items-center gap-4 py-4 md:px-4 px-1">
                         <div>
-                          <div className="rounded-lg overflow-hidden bg-gray-500/10 p-2">
+                          <div className="rounded-lg overflow-hidden bg-[var(--surface-card)] border border-[var(--border)] p-2">
                             <Image
                               src={productImage}
                               alt={product.name}
@@ -60,23 +60,23 @@ const Cart = () => {
                             />
                           </div>
                           <button
-                            className="md:hidden text-xs text-orange-600 mt-1"
+                            className="md:hidden text-xs text-[var(--accent)] mt-1"
                             onClick={() => updateCartQuantity(product._id, 0)}
                           >
                             Remove
                           </button>
                         </div>
                         <div className="text-sm hidden md:block">
-                          <p className="text-gray-800">{product.name}</p>
+                          <p className="text-[var(--text-primary)]">{product.name}</p>
                           <button
-                            className="text-xs text-orange-600 mt-1"
+                            className="text-xs text-[var(--accent)] mt-1"
                             onClick={() => updateCartQuantity(product._id, 0)}
                           >
                             Remove
                           </button>
                         </div>
                       </td>
-                      <td className="py-4 md:px-4 px-1 text-gray-600">${product.offerPrice}</td>
+                      <td className="py-4 md:px-4 px-1 text-[var(--text-secondary)]">${product.offerPrice}</td>
                       <td className="py-4 md:px-4 px-1">
                         <div className="flex items-center md:gap-2 gap-1">
                           <button onClick={() => updateCartQuantity(product._id, cartItems[itemId] - 1)}>
@@ -96,14 +96,14 @@ const Cart = () => {
                           </button>
                         </div>
                       </td>
-                      <td className="py-4 md:px-4 px-1 text-gray-600">${(product.offerPrice * cartItems[itemId]).toFixed(2)}</td>
+                      <td className="py-4 md:px-4 px-1 text-[var(--text-secondary)] font-semibold">${(product.offerPrice * cartItems[itemId]).toFixed(2)}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-          <button onClick={()=> router.push('/all-products')} className="group flex items-center mt-6 gap-2 text-orange-600">
+          <button onClick={()=> router.push('/all-products')} className="group btn-outline mt-6">
             <Image
               className="group-hover:-translate-x-1 transition"
               src={assets.arrow_right_icon_colored}

@@ -1,14 +1,11 @@
-import { Outfit } from "next/font/google";
 import "./globals.css";
 import { AppContextProvider } from "@/context/AppContext";
 import { Toaster } from "react-hot-toast";
 import { ClerkProvider } from "@clerk/nextjs";
 
-const outfit = Outfit({ subsets: ['latin'], weight: ["300", "400", "500"] })
-
 export const metadata = {
-  title: "QuickCart - GreatStack",
-  description: "E-Commerce with Next.js ",
+  title: "Shounen Trendz | Streetwear",
+  description: "Street style fashion with anime energy.",
 };
 
 export default function RootLayout({ children }) {
@@ -16,7 +13,7 @@ export default function RootLayout({ children }) {
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body
-          className={`${outfit.className} antialiased text-gray-700`}
+          className="antialiased city-grain"
           suppressHydrationWarning
         >
           <Toaster />
