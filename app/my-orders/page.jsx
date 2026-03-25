@@ -43,27 +43,30 @@ const MyOrders = () => {
     return (
         <>
             <Navbar />
-            <div className="flex flex-col justify-between px-6 md:px-16 lg:px-32 py-6 min-h-screen">
+            <div className="flex flex-col justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-8 min-h-screen">
                 <div className="space-y-5">
-                    <h2 className="text-lg font-medium mt-6">My Orders</h2>
-                    {loading ? <Loading /> : (<div className="max-w-5xl border-t border-gray-300 text-sm">
+                    <div className="mt-6 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+                        <h2 className="heading-display text-5xl md:text-6xl text-[var(--ink)]">My Orders</h2>
+                        <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[var(--text-muted)]">Track every drop you copped</p>
+                    </div>
+                    {loading ? <Loading /> : (<div className="max-w-5xl border-t border-[var(--border)] text-sm">
                         {orders.map((order, index) => (
-                            <div key={index} className="flex flex-col md:flex-row gap-5 justify-between p-5 border-b border-gray-300">
+                            <div key={index} className="flex flex-col md:flex-row gap-5 justify-between p-5 border-b border-[var(--border)] bg-[var(--surface-card)]/60">
                                 <div className="flex-1 flex gap-5 max-w-80">
                                     <Image
-                                        className="max-w-16 max-h-16 object-cover"
+                                        className="max-w-16 max-h-16 object-cover rounded-lg p-2 bg-[var(--surface-alt)]"
                                         src={assets.box_icon}
                                         alt="box_icon"
                                     />
                                     <p className="flex flex-col gap-3">
-                                        <span className="font-medium text-base">
+                                        <span className="font-medium text-base text-[var(--text-primary)]">
                                             {order.items.map((item) => item.product.name + ` x ${item.quantity}`).join(", ")}
                                         </span>
-                                        <span>Items : {order.items.length}</span>
+                                        <span className="text-[var(--text-muted)]">Items : {order.items.length}</span>
                                     </p>
                                 </div>
                                 <div>
-                                    <p>
+                                    <p className="text-[var(--text-secondary)]">
                                         <span className="font-medium">{order.address.fullName}</span>
                                         <br />
                                         <span >{order.address.area}</span>
@@ -73,12 +76,12 @@ const MyOrders = () => {
                                         <span>{order.address.phoneNumber}</span>
                                     </p>
                                 </div>
-                                <p className="font-medium my-auto">{currency}{order.amount}</p>
+                                <p className="font-semibold my-auto text-[var(--text-primary)]">{currency}{order.amount}</p>
                                 <div>
-                                    <p className="flex flex-col">
+                                    <p className="flex flex-col text-[var(--text-muted)]">
                                         <span>Method : COD</span>
                                         <span>Date : {new Date(order.date).toLocaleDateString()}</span>
-                                        <span>Payment : Pending</span>
+                                        <span className="text-[var(--accent)]">Payment : Pending</span>
                                     </p>
                                 </div>
                             </div>
