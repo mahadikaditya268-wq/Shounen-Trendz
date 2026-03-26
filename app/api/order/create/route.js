@@ -1,10 +1,12 @@
 import connectDB from "@/config/db";
-import { inngest } from "@/config/inngest";
+import Address from "@/models/Address";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
 import User from "@/models/User";
+import { buyerEmailHtml, sellerEmailHtml } from "@/emails/orderConfirmation";
 import { clerkClient, getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
 
 
 
@@ -51,22 +53,61 @@ export async function POST(request) {
             date: Date.now()
         })
 
-        // Fire and forget email notifications. Order persistence is not coupled to email delivery.
+        // Send both buyer and seller notifications to your own inbox in current setup.
         try {
-            const eventResult = await inngest.send({
-                name: 'order/email-notify',
-                data: {
-                    orderId: savedOrder._id.toString()
-                }
+            const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+            const fromEmail = process.env.ORDER_EMAIL_FROM || 'onboarding@resend.dev'
+            const receiverEmail = process.env.SELLER_EMAIL || process.env.RESEND_TEST_EMAIL
+
+            if (!resend) {
+                throw new Error('RESEND_API_KEY is missing')
+            }
+
+            if (!receiverEmail) {
+                throw new Error('SELLER_EMAIL or RESEND_TEST_EMAIL is required')
+            }
+
+            const addressDoc = await Address.findById(address)
+            const populatedItems = await Promise.all(
+                items.map(async (item) => {
+                    const product = await Product.findById(item.product)
+                    return { ...item, product }
+                })
+            )
+
+            const emailData = {
+                items: populatedItems,
+                amount: totalAmount,
+                address: addressDoc,
+                date: savedOrder.date,
+                orderId: savedOrder._id
+            }
+
+            const buyerResult = await resend.emails.send({
+                from: fromEmail,
+                to: receiverEmail,
+                subject: 'Your Drop is Locked In - Order Confirmed!',
+                html: buyerEmailHtml({ ...emailData, name: user.name || 'Customer' }),
             })
 
-            if (!eventResult?.ids?.length) {
-                console.error('Inngest accepted no event IDs for order email event:', eventResult)
-            } else {
-                console.log('Inngest order email event enqueued:', eventResult.ids[0])
+            if (buyerResult?.error) {
+                throw new Error(buyerResult.error.message || 'Failed to send buyer email')
             }
-        } catch (eventError) {
-            console.error('Failed to enqueue order email event:', eventError?.message || eventError)
+
+            const sellerResult = await resend.emails.send({
+                from: fromEmail,
+                to: receiverEmail,
+                subject: `New Order - $${totalAmount} | ${populatedItems.reduce((a, item) => a + item.quantity, 0)} units`,
+                html: sellerEmailHtml(emailData),
+            })
+
+            if (sellerResult?.error) {
+                throw new Error(sellerResult.error.message || 'Failed to send seller email')
+            }
+
+            console.log('Order emails sent to:', receiverEmail)
+        } catch (emailError) {
+            console.error('Order email send failed:', emailError?.message || emailError)
         }
 
         // clear user cart
