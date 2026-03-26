@@ -66,18 +66,21 @@ export const syncUserDeletion = inngest.createFunction(
 // Inngest Function to create user's order in database
 export const createUserOrder = inngest.createFunction(
     {
-        id:'create-user-order-email'
+        id:'create-user-order-email',
+        retries: 1
     },
     {event: 'order/email-notify'},
     async ({event}) => {
         console.log('Inngest email function triggered for orderId:', event?.data?.orderId)
         const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
         const fromEmail = process.env.ORDER_EMAIL_FROM || 'onboarding@resend.dev'
+        const testRecipient = process.env.RESEND_TEST_EMAIL
         const sellerEmail = process.env.SELLER_EMAIL
         console.log('Inngest email env check:', {
             hasResendKey: !!process.env.RESEND_API_KEY,
             fromEmail,
-            hasSellerEmail: !!sellerEmail
+            hasSellerEmail: !!sellerEmail,
+            hasTestRecipient: !!testRecipient
         })
 
         if (!resend) {
@@ -101,9 +104,11 @@ export const createUserOrder = inngest.createFunction(
             }
 
             const user = await User.findById(savedOrder.userId)
+            const buyerRecipient = testRecipient || user?.email
+            const sellerRecipient = testRecipient || sellerEmail
 
-            if (!user?.email && !sellerEmail) {
-                throw new Error('No recipient found: user email and SELLER_EMAIL are both missing')
+            if (!buyerRecipient && !sellerRecipient) {
+                throw new Error('No recipient found: set RESEND_TEST_EMAIL or provide buyer/seller emails')
             }
 
             const emailData = {
@@ -114,10 +119,10 @@ export const createUserOrder = inngest.createFunction(
                 orderId: savedOrder._id
             }
 
-            if (user?.email) {
+            if (buyerRecipient) {
                 const buyerResult = await resend.emails.send({
                     from: fromEmail,
-                    to: user.email,
+                    to: buyerRecipient,
                     subject: 'Your Drop is Locked In - Order Confirmed!',
                     html: buyerEmailHtml({ ...emailData, name: user.name || 'Customer' }),
                 })
@@ -129,10 +134,10 @@ export const createUserOrder = inngest.createFunction(
                 }
             }
 
-            if (sellerEmail) {
+            if (sellerRecipient) {
                 const sellerResult = await resend.emails.send({
                     from: fromEmail,
-                    to: sellerEmail,
+                    to: sellerRecipient,
                     subject: `New Order - $${savedOrder.amount} | ${savedOrder.items.reduce((a, item) => a + item.quantity, 0)} units`,
                     html: sellerEmailHtml(emailData),
                 })
