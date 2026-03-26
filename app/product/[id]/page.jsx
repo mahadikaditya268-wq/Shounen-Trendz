@@ -9,12 +9,13 @@ import { useParams } from "next/navigation";
 import Loading from "@/components/Loading";
 import { useAppContext } from "@/context/AppContext";
 import React from "react";
+import axios from "axios";
 
 const Product = () => {
 
     const { id } = useParams();
 
-    const { products, router, addToCart } = useAppContext()
+    const { products, router, addToCart, currency } = useAppContext()
 
     const [mainImage, setMainImage] = useState(null);
     const [productData, setProductData] = useState(null);
@@ -30,13 +31,31 @@ const Product = () => {
     const productImages = productData?.image?.map((item) => getImageUrl(item)).filter(Boolean) || []
 
     const fetchProductData = async () => {
-        const product = products.find(product => product._id === id);
-        setProductData(product);
+        const productFromContext = products.find((product) => String(product._id) === String(id));
+
+        if (productFromContext) {
+            setProductData(productFromContext);
+            setMainImage(getImageUrl(productFromContext.image?.[0]) || null);
+            return;
+        }
+
+        try {
+            const { data } = await axios.get(`/api/product/${id}`)
+
+            if (data.success) {
+                setProductData(data.product)
+                setMainImage(getImageUrl(data.product?.image?.[0]) || null)
+            } else {
+                setProductData(null)
+            }
+        } catch (error) {
+            setProductData(null)
+        }
     }
 
     useEffect(() => {
         fetchProductData();
-    }, [id, products.length])
+    }, [id, products])
 
     return productData ? (<>
         <Navbar />
@@ -98,9 +117,9 @@ const Product = () => {
                         {productData.description}
                     </p>
                     <p className="text-3xl font-semibold mt-6 text-[var(--ink)]">
-                        ${productData.offerPrice}
+                        {currency}{productData.offerPrice}
                         <span className="text-base font-normal text-[var(--text-muted)] line-through ml-2">
-                            ${productData.price}
+                            {currency}{productData.price}
                         </span>
                     </p>
                     <hr className="bg-[var(--border)] my-6" />

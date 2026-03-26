@@ -1,7 +1,8 @@
-import { inngest } from "@/config/inngest";
+import connectDB from "@/config/db";
+import Order from "@/models/Order";
 import Product from "@/models/Product";
 import User from "@/models/User";
-import { getAuth } from "@clerk/nextjs/server";
+import { clerkClient, getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 
@@ -12,8 +13,25 @@ export async function POST(request) {
         const { userId } = getAuth(request)
         const { address, items } = await request.json();
 
+        if (!userId) {
+            return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+        }
+
+        await connectDB()
+
         if (!address || items.length === 0) {
             return NextResponse.json({ success: false, message: 'Invalid data' });
+        }
+
+        let user = await User.findById(userId)
+        if (!user) {
+            const clerkUser = await (await clerkClient()).users.getUser(userId)
+            user = await User.create({
+                _id: userId,
+                name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || 'User',
+                email: clerkUser.emailAddresses?.[0]?.emailAddress || `${userId}@placeholder.local`,
+                imageUrl: clerkUser.imageUrl || ''
+            })
         }
 
         // calculate amount using items
@@ -22,19 +40,17 @@ export async function POST(request) {
             return await acc + product.offerPrice * item.quantity;
         }, 0)
 
-        await inngest.send({
-            name: 'order/created',
-            data: {
-                userId,
-                address,
-                items,
-                amount: amount + Math.floor(amount * 0.02),
-                date: Date.now()
-            }
+        const totalAmount = amount + Math.floor(amount * 0.02)
+
+        await Order.create({
+            userId,
+            address,
+            items,
+            amount: totalAmount,
+            date: Date.now()
         })
 
         // clear user cart
-        const user = await User.findById(userId)
         user.cartItems = {}
         await user.save()
 
