@@ -1,4 +1,5 @@
 import connectDB from "@/config/db";
+import { inngest } from "@/config/inngest";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
 import User from "@/models/User";
@@ -42,13 +43,31 @@ export async function POST(request) {
 
         const totalAmount = amount + Math.floor(amount * 0.02)
 
-        await Order.create({
+        const savedOrder = await Order.create({
             userId,
             address,
             items,
             amount: totalAmount,
             date: Date.now()
         })
+
+        // Fire and forget email notifications. Order persistence is not coupled to email delivery.
+        try {
+            const eventResult = await inngest.send({
+                name: 'order/email-notify',
+                data: {
+                    orderId: savedOrder._id.toString()
+                }
+            })
+
+            if (!eventResult?.ids?.length) {
+                console.error('Inngest accepted no event IDs for order email event:', eventResult)
+            } else {
+                console.log('Inngest order email event enqueued:', eventResult.ids[0])
+            }
+        } catch (eventError) {
+            console.error('Failed to enqueue order email event:', eventError?.message || eventError)
+        }
 
         // clear user cart
         user.cartItems = {}

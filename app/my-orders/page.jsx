@@ -24,7 +24,7 @@ const MyOrders = () => {
             const {data} = await axios.get('/api/order/list', {headers:{Authorization:`Bearer ${token}`}})
 
             if (data.success) {
-                setOrders(data.orders.reverse())
+                setOrders(data.orders)
                 setLoading(false)
             }else {
                 toast.error(data.message)
