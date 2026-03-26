@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 
 const ProductList = () => {
 
-  const { router, getToken, user } = useAppContext()
+  const { router, getToken, user, currency } = useAppContext()
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -140,7 +140,7 @@ const ProductList = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3">{product.category}</td>
-                      <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">${product.offerPrice}</td>
+                      <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">{currency}{product.offerPrice}</td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap items-center gap-2">
                           <button
