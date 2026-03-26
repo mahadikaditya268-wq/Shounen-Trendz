@@ -57,14 +57,18 @@ export async function POST(request) {
         try {
             const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
             const fromEmail = process.env.ORDER_EMAIL_FROM || 'onboarding@resend.dev'
-            const receiverEmail = process.env.SELLER_EMAIL || process.env.RESEND_TEST_EMAIL
+            const sellerEmail = process.env.SELLER_EMAIL
+            const testEmail = process.env.RESEND_TEST_EMAIL
+            const isResendOnboardingSender = fromEmail.toLowerCase() === 'onboarding@resend.dev'
+            const buyerRecipient = user.email
+            const sellerRecipient = testEmail || sellerEmail
 
             if (!resend) {
                 throw new Error('RESEND_API_KEY is missing')
             }
 
-            if (!receiverEmail) {
-                throw new Error('SELLER_EMAIL or RESEND_TEST_EMAIL is required')
+            if (!buyerRecipient || !sellerRecipient) {
+                throw new Error('Recipient resolution failed. Ensure buyer email exists and set SELLER_EMAIL or RESEND_TEST_EMAIL.')
             }
 
             const addressDoc = await Address.findById(address)
@@ -83,20 +87,28 @@ export async function POST(request) {
                 orderId: savedOrder._id
             }
 
-            const buyerResult = await resend.emails.send({
-                from: fromEmail,
-                to: receiverEmail,
-                subject: 'Your Drop is Locked In - Order Confirmed!',
-                html: buyerEmailHtml({ ...emailData, name: user.name || 'Customer' }),
-            })
+            try {
+                const buyerResult = await resend.emails.send({
+                    from: fromEmail,
+                    to: buyerRecipient,
+                    subject: 'Your Drop is Locked In - Order Confirmed!',
+                    html: buyerEmailHtml({ ...emailData, name: user.name || 'Customer' }),
+                })
 
-            if (buyerResult?.error) {
-                throw new Error(buyerResult.error.message || 'Failed to send buyer email')
+                if (buyerResult?.error) {
+                    throw new Error(buyerResult.error.message || 'Failed to send buyer email')
+                }
+            } catch (buyerError) {
+                console.error('Buyer email send failed:', buyerError?.message || buyerError)
+
+                if (isResendOnboardingSender) {
+                    console.warn('Buyer email blocked by Resend test-mode recipient restriction for onboarding sender.')
+                }
             }
 
             const sellerResult = await resend.emails.send({
                 from: fromEmail,
-                to: receiverEmail,
+                to: sellerRecipient,
                 subject: `New Order - $${totalAmount} | ${populatedItems.reduce((a, item) => a + item.quantity, 0)} units`,
                 html: sellerEmailHtml(emailData),
             })
@@ -105,7 +117,7 @@ export async function POST(request) {
                 throw new Error(sellerResult.error.message || 'Failed to send seller email')
             }
 
-            console.log('Order emails sent to:', receiverEmail)
+            console.log('Order emails sent:', { buyerRecipient, sellerRecipient, isResendOnboardingSender })
         } catch (emailError) {
             console.error('Order email send failed:', emailError?.message || emailError)
         }
