@@ -1,9 +1,12 @@
 import connectDB from "@/config/db";
+import Address from "@/models/Address";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
 import User from "@/models/User";
+import { buyerEmailHtml, sellerEmailHtml } from "@/emails/orderConfirmation";
 import { clerkClient, getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
 
 
 
@@ -42,13 +45,82 @@ export async function POST(request) {
 
         const totalAmount = amount + Math.floor(amount * 0.02)
 
-        await Order.create({
+        const savedOrder = await Order.create({
             userId,
             address,
             items,
             amount: totalAmount,
             date: Date.now()
         })
+
+        // Send both buyer and seller notifications to your own inbox in current setup.
+        try {
+            const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+            const fromEmail = process.env.ORDER_EMAIL_FROM || 'onboarding@resend.dev'
+            const sellerEmail = process.env.SELLER_EMAIL
+            const testEmail = process.env.RESEND_TEST_EMAIL
+            const isResendOnboardingSender = fromEmail.toLowerCase() === 'onboarding@resend.dev'
+            const buyerRecipient = user.email
+            const sellerRecipient = testEmail || sellerEmail
+
+            if (!resend) {
+                throw new Error('RESEND_API_KEY is missing')
+            }
+
+            if (!buyerRecipient || !sellerRecipient) {
+                throw new Error('Recipient resolution failed. Ensure buyer email exists and set SELLER_EMAIL or RESEND_TEST_EMAIL.')
+            }
+
+            const addressDoc = await Address.findById(address)
+            const populatedItems = await Promise.all(
+                items.map(async (item) => {
+                    const product = await Product.findById(item.product)
+                    return { ...item, product }
+                })
+            )
+
+            const emailData = {
+                items: populatedItems,
+                amount: totalAmount,
+                address: addressDoc,
+                date: savedOrder.date,
+                orderId: savedOrder._id
+            }
+
+            try {
+                const buyerResult = await resend.emails.send({
+                    from: fromEmail,
+                    to: buyerRecipient,
+                    subject: 'Your Drop is Locked In - Order Confirmed!',
+                    html: buyerEmailHtml({ ...emailData, name: user.name || 'Customer' }),
+                })
+
+                if (buyerResult?.error) {
+                    throw new Error(buyerResult.error.message || 'Failed to send buyer email')
+                }
+            } catch (buyerError) {
+                console.error('Buyer email send failed:', buyerError?.message || buyerError)
+
+                if (isResendOnboardingSender) {
+                    console.warn('Buyer email blocked by Resend test-mode recipient restriction for onboarding sender.')
+                }
+            }
+
+            const sellerResult = await resend.emails.send({
+                from: fromEmail,
+                to: sellerRecipient,
+                subject: `New Order - $${totalAmount} | ${populatedItems.reduce((a, item) => a + item.quantity, 0)} units`,
+                html: sellerEmailHtml(emailData),
+            })
+
+            if (sellerResult?.error) {
+                throw new Error(sellerResult.error.message || 'Failed to send seller email')
+            }
+
+            console.log('Order emails sent:', { buyerRecipient, sellerRecipient, isResendOnboardingSender })
+        } catch (emailError) {
+            console.error('Order email send failed:', emailError?.message || emailError)
+        }
 
         // clear user cart
         user.cartItems = {}

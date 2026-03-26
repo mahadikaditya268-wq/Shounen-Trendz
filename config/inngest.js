@@ -2,6 +2,10 @@ import { Inngest } from "inngest";
 import connectDB from "./db";
 import User from "@/models/User";
 import Order from "@/models/Order";
+import Address from "@/models/Address";
+import Product from "@/models/Product";
+import { Resend } from "resend";
+import { buyerEmailHtml, sellerEmailHtml } from "@/emails/orderConfirmation";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "quickcart-next" });
@@ -62,29 +66,94 @@ export const syncUserDeletion = inngest.createFunction(
 // Inngest Function to create user's order in database
 export const createUserOrder = inngest.createFunction(
     {
-        id:'create-user-order',
-        batchEvents: {
-            maxSize: 5,
-            timeout: '5s'
-        }
+        id:'create-user-order-email',
+        retries: 1
     },
-    {event: 'order/created'},
-    async ({events}) => {
-        
-        const orders = events.map((event)=> {
-            return {
-                userId: event.data.userId,
-                items: event.data.items,
-                amount: event.data.amount,
-                address: event.data.address,
-                date : event.data.date
-            }
+    {event: 'order/email-notify'},
+    async ({event}) => {
+        console.log('Inngest email function triggered for orderId:', event?.data?.orderId)
+        const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+        const fromEmail = process.env.ORDER_EMAIL_FROM || 'onboarding@resend.dev'
+        const testRecipient = process.env.RESEND_TEST_EMAIL
+        const sellerEmail = process.env.SELLER_EMAIL
+        console.log('Inngest email env check:', {
+            hasResendKey: !!process.env.RESEND_API_KEY,
+            fromEmail,
+            hasSellerEmail: !!sellerEmail,
+            hasTestRecipient: !!testRecipient
         })
 
-        await connectDB()
-        await Order.insertMany(orders)
+        if (!resend) {
+            throw new Error('RESEND_API_KEY is missing in Next.js runtime')
+        }
 
-        return { success: true, processed: orders.length };
+        if (!event?.data?.orderId) {
+            throw new Error('orderId is required')
+        }
+
+        await connectDB()
+
+        try {
+            // Ensure referenced schemas are registered for populate in this runtime.
+            void Address
+            void Product
+            const savedOrder = await Order.findById(event.data.orderId).populate('address items.product')
+
+            if (!savedOrder) {
+                throw new Error(`Order not found for id ${event.data.orderId}`)
+            }
+
+            const user = await User.findById(savedOrder.userId)
+            const buyerRecipient = testRecipient || user?.email
+            const sellerRecipient = testRecipient || sellerEmail
+
+            if (!buyerRecipient && !sellerRecipient) {
+                throw new Error('No recipient found: set RESEND_TEST_EMAIL or provide buyer/seller emails')
+            }
+
+            const emailData = {
+                items: savedOrder.items,
+                amount: savedOrder.amount,
+                address: savedOrder.address,
+                date: savedOrder.date,
+                orderId: savedOrder._id
+            }
+
+            if (buyerRecipient) {
+                const buyerResult = await resend.emails.send({
+                    from: fromEmail,
+                    to: buyerRecipient,
+                    subject: 'Your Drop is Locked In - Order Confirmed!',
+                    html: buyerEmailHtml({ ...emailData, name: user.name || 'Customer' }),
+                })
+
+                console.log('Buyer email API response:', buyerResult)
+
+                if (buyerResult?.error) {
+                    throw new Error(buyerResult.error.message || 'Failed to send buyer email')
+                }
+            }
+
+            if (sellerRecipient) {
+                const sellerResult = await resend.emails.send({
+                    from: fromEmail,
+                    to: sellerRecipient,
+                    subject: `New Order - $${savedOrder.amount} | ${savedOrder.items.reduce((a, item) => a + item.quantity, 0)} units`,
+                    html: sellerEmailHtml(emailData),
+                })
+
+                console.log('Seller email API response:', sellerResult)
+
+                if (sellerResult?.error) {
+                    throw new Error(sellerResult.error.message || 'Failed to send seller email')
+                }
+            }
+        } catch (emailError) {
+            console.error('Email send failed:', emailError?.message || emailError)
+            throw emailError
+        }
+
+        return { success: true, processed: 1 };
 
     }
 )
