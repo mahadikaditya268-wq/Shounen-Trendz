@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 
 const AddProduct = () => {
 
-  const { getToken } = useAppContext()
+  const { getToken, fetchProductData } = useAppContext()
 
   const [files, setFiles] = useState([]);
   const [name, setName] = useState('');
@@ -40,6 +40,7 @@ const AddProduct = () => {
 
       if (data.success) {
         toast.success(data.message)
+        await fetchProductData()
         setFiles([]);
         setName('');
         setDescription('');
