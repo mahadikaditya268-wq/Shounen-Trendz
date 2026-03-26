@@ -22,7 +22,10 @@ export async function POST(request) {
         const isSeller = await authSeller(userId)
 
         if (!isSeller) {
-            return NextResponse.json({ success: false, message: 'not authorized' })
+            return NextResponse.json(
+                { success: false, message: 'not authorized' },
+                { status: 403 }
+            )
         }
 
         const formData = await request.formData()
@@ -36,7 +39,10 @@ export async function POST(request) {
         const files = formData.getAll('images');
 
         if (!files || files.length === 0) {
-            return NextResponse.json({ success: false, message: 'no files uploaded' })
+            return NextResponse.json(
+                { success: false, message: 'no files uploaded' },
+                { status: 400 }
+            )
         }
 
         const result = await Promise.all(
@@ -45,9 +51,13 @@ export async function POST(request) {
                 const buffer = Buffer.from(arrayBuffer)
 
                 return new Promise((resolve,reject)=>{
+                    let settled = false
                     const stream = cloudinary.uploader.upload_stream(
                         {resource_type: 'auto'},
                         (error,result) => {
+                            if (settled) return
+                            settled = true
+
                             if (error) {
                                 reject(error)
                             } else {
@@ -55,6 +65,13 @@ export async function POST(request) {
                             }
                         }
                     )
+
+                    stream.on('error', (streamError) => {
+                        if (settled) return
+                        settled = true
+                        reject(streamError)
+                    })
+
                     stream.end(buffer)
                 })
             })
@@ -81,6 +98,17 @@ export async function POST(request) {
 
 
     } catch (error) {
-        return NextResponse.json({ success: false, message: error.message })
+        const message = error?.message || 'Upload failed'
+        const httpCode = error?.http_code
+        const status = Number.isInteger(httpCode) && httpCode >= 400 && httpCode <= 599 ? httpCode : 500
+
+        return NextResponse.json(
+            {
+                success: false,
+                message,
+                ...(httpCode ? { providerStatus: httpCode } : {}),
+            },
+            { status }
+        )
     }
 }
